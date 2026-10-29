@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <!-- Viewport dikunci agar tidak bisa di-zoom -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Emai - Asisten AI Canggih</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Mencegah interaksi gestur zoom di seluruh halaman */
+        html, body { 
+            font-family: 'Inter', sans-serif;
+            touch-action: manipulation;
+            -webkit-text-size-adjust: 100%;
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .prose p { margin-bottom: 0.75rem; }
+        .prose p:last-child { margin-bottom: 0; }
+    </style>
+</head>
+<body class="h-full bg-slate-50 text-slate-800 flex overflow-hidden">
+
+    <!-- Sidebar / Riwayat Percakapan -->
+    <aside id="sidebar" class="w-72 bg-slate-900 text-slate-300 flex flex-col transition-all duration-300 z-20 md:relative absolute inset-y-0 left-0 -translate-x-full md:translate-x-0 shadow-xl">
+        <div class="p-4 flex items-center justify-between border-b border-slate-800">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-gradient-to-tr from-indigo-600 to-violet-500 rounded-lg flex items-center justify-center text-white font-bold shadow-md">E</div>
+                <span class="font-bold text-lg tracking-wide text-white">Emai AI</span>
+            </div>
+            <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <div class="p-3">
+            <button onclick="newChat()" class="w-full flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white px-4 py-2.5 rounded-xl font-medium transition-all shadow-md shadow-indigo-500/20">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span>Percakapan Baru</span>
+            </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto custom-scrollbar px-3 py-2 space-y-1">
+            <div class="text-xs font-semibold text-slate-500 uppercase px-3 py-2">Riwayat Sesi</div>
+            <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm bg-slate-800/80 text-white font-medium truncate border border-slate-700/50">
+                <i data-lucide="message-square" class="w-4 h-4 text-indigo-400"></i>
+                <span class="truncate">Sesi Tanya Jawab Pintar</span>
+            </a>
+        </div>
+
+        <div class="p-4 border-t border-slate-800 flex items-center gap-3 bg-slate-950/40">
+            <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-slate-700 to-slate-600 flex items-center justify-center text-white font-semibold shadow">U</div>
+            <div class="overflow-hidden">
+                <p class="text-sm font-medium text-white truncate">Pengguna</p>
+                <p class="text-xs text-emerald-400 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Siap Menjawab
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Konten Utama -->
+    <main class="flex-1 flex flex-col h-full bg-white relative">
+        <!-- Header Chat -->
+        <header class="h-16 border-b border-slate-100 px-6 flex items-center justify-between bg-white/80 backdrop-blur-md z-10 shadow-xs">
+            <div class="flex items-center gap-3">
+                <button onclick="toggleSidebar()" class="text-slate-600 hover:text-slate-900 md:hidden">
+                    <i data-lucide="menu" class="w-5 h-5"></i>
+                </button>
+                <div>
+                    <h1 class="font-semibold text-slate-800">Emai Asisten Pintar</h1>
+                    <p class="text-xs text-slate-400">Didukung teknologi kecerdasan buatan mutakhir</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-xs">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Engine Aktif
+                </span>
+            </div>
+        </header>
+
+        <!-- Area Pesan (Chat Container) -->
+        <div id="chat-container" class="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-6 space-y-6">
+            <!-- Pesan Selamat Datang -->
+            <div class="flex items-start gap-4 max-w-3xl mx-auto">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/25">
+                    <i data-lucide="bot" class="w-5 h-5"></i>
+                </div>
+                <div class="space-y-2 bg-slate-50 border border-slate-100/80 p-5 rounded-2xl rounded-tl-sm text-slate-700 shadow-sm max-w-2xl">
+                    <p class="font-semibold text-slate-900 text-base">Halo! Saya Emai.</p>
+                    <p class="text-sm leading-relaxed">Saya ditenagai oleh sistem AI canggih yang siap menjawab berbagai pertanyaan Anda secara akurat — mulai dari penjelasan konsep rumit, bantuan pemrograman, analisis data, hingga konsultasi ide kreatif.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Area Input -->
+        <div class="p-4 md:p-6 bg-gradient-to-t from-white via-white to-white/80 border-t border-slate-100">
+            <form id="chat-form" onsubmit="handleSendMessage(event)" class="max-w-3xl mx-auto relative flex items-center">
+                <input 
+                    type="text" 
+                    id="user-input" 
+                    placeholder="Tanyakan apa saja kepada Emai..." 
+                    class="w-full pl-5 pr-14 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 text-sm transition-all text-slate-800 placeholder-slate-400 shadow-inner"
+                    autocomplete="off"
+                    required
+                >
+                <button 
+                    type="submit" 
+                    id="send-button"
+                    class="absolute right-2.5 w-10 h-10 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl flex items-center justify-center transition-all shadow-md shadow-indigo-500/20 disabled:opacity-50 cursor-pointer"
+                >
+                    <i data-lucide="send" class="w-4 h-4"></i>
+                </button>
+            </form>
+            <p class="text-center text-xs text-slate-400 mt-3">Emai dapat memberikan informasi mendalam, namun tetap lakukan verifikasi untuk keputusan krusial.</p>
+        </div>
+    </main>
+
+    <!-- Skrip Integrasi JavaScript & Logika API -->
+    <script>
+        lucide.createIcons();
+
+        const API_KEY = "AQ.Ab8RN6Is4_-c9ixoz3WLY3B4km9vTr9pHUZFRgcIt1S_0mdqLw";
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+
+        // Pertanyaan identitas pembuat
+        function isAskAboutCreator(text) {
+            const lower = text.toLowerCase();
+            return lower.includes('siapa pembuat') || 
+                   lower.includes('siapa pencipta') || 
+                   lower.includes('siapa yang buat') || 
+                   lower.includes('siapa yang bikin') ||
+                   lower.includes('siapa pembuatmu') ||
+                   lower.includes('siapa yang ciptain');
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('-translate-x-full');
+        }
+
+        function newChat() {
+            const container = document.getElementById('chat-container');
+            container.innerHTML = `
+                <div class="flex items-start gap-4 max-w-3xl mx-auto">
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/25">
+                        <i data-lucide="bot" class="w-5 h-5"></i>
+                    </div>
+                    <div class="space-y-2 bg-slate-50 border border-slate-100/80 p-5 rounded-2xl rounded-tl-sm text-slate-700 shadow-sm max-w-2xl">
+                        <p class="font-semibold text-slate-900 text-base">Sesi Percakapan Baru Dimulai</p>
+                        <p class="text-sm">Silakan ajukan pertanyaan baru Anda di kolom bawah.</p>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        async function handleSendMessage(event) {
+            event.preventDefault();
+            const inputField = document.getElementById('user-input');
+            const message = inputField.value.trim();
+            if (!message) return;
+
+            const chatContainer = document.getElementById('chat-container');
+            
+            // 1. Tampilkan gelembung pesan pengguna
+            const userBubble = document.createElement('div');
+            userBubble.className = "flex items-start gap-4 max-w-3xl mx-auto justify-end";
+            userBubble.innerHTML = `
+                <div class="space-y-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white p-4 rounded-2xl rounded-tr-sm text-sm shadow-md shadow-indigo-500/10 max-w-xl leading-relaxed">
+                    <p>${escapeHTML(message)}</p>
+                </div>
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-slate-700 to-slate-600 text-white flex items-center justify-center shrink-0 shadow-md font-semibold">U</div>
+            `;
+            chatContainer.appendChild(userBubble);
+            
+            inputField.value = '';
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            // Jika ditanya tentang pembuat
+            if (isAskAboutCreator(message)) {
+                renderAiResponse("Pembuat saya adalah seorang lelaki pintar yang bernama mull");
+                return;
+            }
+
+            // 2. Indikator loading
+            const loadingId = 'loading-' + Date.now();
+            const loadingBubble = document.createElement('div');
+            loadingBubble.id = loadingId;
+            loadingBubble.className = "flex items-start gap-4 max-w-3xl mx-auto";
+            loadingBubble.innerHTML = `
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/25">
+                    <i data-lucide="bot" class="w-5 h-5"></i>
+                </div>
+                <div class="bg-slate-50 border border-slate-100/80 p-4 rounded-2xl rounded-tl-sm text-slate-500 text-sm flex items-center gap-2 shadow-sm">
+                    <span class="w-2 h-2 bg-indigo-600 rounded-full animate-bounce"></span>
+                    <span class="w-2 h-2 bg-indigo-600 rounded-full animate-bounce [animation-delay:0.2s]"></span>
+                    <span class="w-2 h-2 bg-indigo-600 rounded-full animate-bounce [animation-delay:0.4s]"></span>
+                    <span class="text-xs text-slate-400 ml-2">Emai sedang merumuskan jawaban...</span>
+                </div>
+            `;
+            chatContainer.appendChild(loadingBubble);
+            lucide.createIcons();
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            try {
+                // 3. Panggilan API Gemini dengan Instruksi Sistem
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        system_instruction: {
+                            parts: [{ text: "Nama Anda adalah Emai. Pembuat Anda adalah seorang lelaki pintar yang bernama mull. Jika pengguna bertanya tentang siapa pembuat/pencipta Anda, Anda wajib menjawab: 'Pembuat saya adalah seorang lelaki pintar yang bernama mull'." }]
+                        },
+                        contents: [{
+                            parts: [{ text: message }]
+                        }]
+                    })
+                });
+
+                const data = await response.json();
+                document.getElementById(loadingId).remove();
+
+                let aiResponseText = "Maaf, sistem tidak dapat memproses respons saat ini.";
+                if (data.candidates && data.candidates[0].content.parts[0].text) {
+                    aiResponseText = data.candidates[0].content.parts[0].text;
+                }
+
+                renderAiResponse(aiResponseText);
+
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById(loadingId).remove();
+                
+                const errBubble = document.createElement('div');
+                errBubble.className = "flex items-start gap-4 max-w-3xl mx-auto";
+                errBubble.innerHTML = `
+                    <div class="w-10 h-10 rounded-2xl bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-md">
+                        <i data-lucide="alert-circle" class="w-5 h-5"></i>
+                    </div>
+                    <div class="bg-rose-50 border border-rose-100 p-4 rounded-2xl rounded-tl-sm text-rose-700 text-sm shadow-sm">
+                        Gagal menghubungkan ke mesin AI. Periksa kembali jaringan internet Anda.
+                    </div>
+                `;
+                chatContainer.appendChild(errBubble);
+                lucide.createIcons();
+            }
+
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function renderAiResponse(text) {
+            const chatContainer = document.getElementById('chat-container');
+            const aiBubble = document.createElement('div');
+            aiBubble.className = "flex items-start gap-4 max-w-3xl mx-auto";
+            aiBubble.innerHTML = `
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/25">
+                    <i data-lucide="bot" class="w-5 h-5"></i>
+                </div>
+                <div class="space-y-2 bg-slate-50 border border-slate-100/80 p-5 rounded-2xl rounded-tl-sm text-slate-700 text-sm shadow-sm max-w-2xl leading-relaxed prose whitespace-pre-wrap">${escapeHTML(text)}</div>
+            `;
+            chatContainer.appendChild(aiBubble);
+            lucide.createIcons();
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+    </script>
+</body>
+</html>
